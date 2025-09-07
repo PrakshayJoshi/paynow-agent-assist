@@ -4,7 +4,7 @@ import time
 from uuid import uuid4
 from hashlib import sha256
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 
 from app.models import PaymentRequest, DecisionResponse
@@ -13,13 +13,12 @@ from app.rules import decide
 from app.security import verify_api_key
 from app.ratelimit import check_rate_limit
 from app.metrics import record_request
+from app.logging_cfg import log_json, mask_customer
 from app.storage import (
     SessionLocal, init_db, Idempotency, Case, get_or_create_balance, request_hash, get_lock
 )
 
 router = APIRouter()
-
-# Ensure DB tables exist at import time (simple for local dev)
 init_db()
 
 def get_db():
@@ -32,11 +31,12 @@ def get_db():
 @router.post("/payments/decide", response_model=DecisionResponse)
 def payments_decide(
     req: PaymentRequest,
+    request: Request,
     _=Depends(verify_api_key),
     db: Session = Depends(get_db)
 ) -> DecisionResponse:
     t0 = time.time()
-    request_id = f"req_{uuid4().hex[:8]}"
+    request_id = getattr(request.state, "request_id", f"req_{uuid4().hex[:8]}")
 
     # 1) Rate limit per customerId
     check_rate_limit(req.customerId)
@@ -46,25 +46,28 @@ def payments_decide(
     existing = db.query(Idempotency).filter_by(key=req.idempotencyKey, customer_id=req.customerId).one_or_none()
     if existing and existing.req_hash == rhash:
         resp = existing.response_json
-        # record metrics and return cached
         record_request(resp.get("decision","review"), (time.time()-t0)*1000.0)
+        # Decision log (cached)
+        log_json(event="decision_cached",
+                 requestId=request_id,
+                 decision=resp.get("decision"),
+                 reasons=resp.get("reasons"),
+                 customerId=mask_customer(req.customerId))
         return resp
 
     # 3) Agent & rules
     agent = Agent()
     agent.plan()
-    balance_trace = agent.get_balance(req.customerId)  # trace only
+    agent.get_balance(req.customerId)  # trace only
     risk = agent.get_risk_signals(req.customerId, req.payeeId)
-    # True balance from DB for reservation
     bal_row = get_or_create_balance(db, req.customerId)
     balance = float(bal_row.balance)
     decision, reasons = decide(req.amount, balance, risk)
 
-    # 4) Reserve on allow (concurrency-safe with per-customer lock)
+    # 4) Reserve on allow (per-customer lock)
     if decision == "allow":
         lock = get_lock(req.customerId)
         with lock:
-            # re-read
             bal_row = get_or_create_balance(db, req.customerId)
             if bal_row.balance < req.amount:
                 decision = "block"
@@ -73,10 +76,8 @@ def payments_decide(
                 bal_row.balance = bal_row.balance - req.amount
                 db.add(bal_row)
                 db.commit()
-
         agent.recommend_note("allow")
     elif decision == "review":
-        # create a case
         case = Case(customer_id=req.customerId, payee_id=req.payeeId, reasons=reasons)
         db.add(case)
         db.commit()
@@ -97,7 +98,19 @@ def payments_decide(
         db.add(idem)
         db.commit()
     except Exception:
-        db.rollback()  # swallow unique conflicts as it's safe
+        db.rollback()
+
+    # Decision log + event publish
+    log_json(event="decision",
+             requestId=request_id,
+             decision=decision,
+             reasons=reasons,
+             customerId=mask_customer(req.customerId))
+    log_json(event="payment.decided",
+             requestId=request_id,
+             decision=decision,
+             reasons=reasons,
+             customerId=mask_customer(req.customerId))
 
     # 6) Metrics
     record_request(decision, (time.time()-t0)*1000.0)
