@@ -1,0 +1,57 @@
+[
+  {
+    "name": "review-basic",
+    "payload": {
+      "customerId": "c_123",
+      "amount": 125.5,
+      "currency": "USD",
+      "payeeId": "p_789",
+      "idempotencyKey": "uuid-1"
+    },
+    "expected": "review"
+  },
+  {
+    "name": "allow-safe-vendor",
+    "payload": {
+      "customerId": "c_allow",
+      "amount": 200,
+      "currency": "USD",
+      "payeeId": "safe_vendor",
+      "idempotencyKey": "k1"
+    },
+    "expected": "allow"
+  },
+  {
+    "name": "block-insufficient",
+    "payload": {
+      "customerId": "c_allow",
+      "amount": 200,
+      "currency": "USD",
+      "payeeId": "safe_vendor",
+      "idempotencyKey": "k2"
+    },
+    "expected": "block"
+  },
+  {
+    "name": "review-large-amount",
+    "payload": {
+      "customerId": "c_big",
+      "amount": 5000,
+      "currency": "USD",
+      "payeeId": "safe_vendor",
+      "idempotencyKey": "k3"
+    },
+    "expected": "block"
+  },
+  {
+    "name": "block-insufficient-fresh-user",
+    "payload": {
+      "customerId": "c_small",
+      "amount": 400,
+      "currency": "USD",
+      "payeeId": "safe_vendor",
+      "idempotencyKey": "k4"
+    },
+    "expected": "block"
+  }
+]

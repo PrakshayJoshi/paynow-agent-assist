@@ -10,7 +10,6 @@ from sqlalchemy.orm import Session
 from app.models import PaymentRequest, DecisionResponse
 from app.agent import Agent
 from app.rules import decide
-from app.security import verify_api_key
 from app.ratelimit import check_rate_limit
 from app.metrics import record_request
 from app.logging_cfg import log_json, mask_customer
@@ -32,7 +31,6 @@ def get_db():
 def payments_decide(
     req: PaymentRequest,
     request: Request,
-    _=Depends(verify_api_key),
     db: Session = Depends(get_db)
 ) -> DecisionResponse:
     t0 = time.time()
