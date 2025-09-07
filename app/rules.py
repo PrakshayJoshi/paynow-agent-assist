@@ -1,9 +1,4 @@
 
-# Phase 2: deterministic rules returning (decision, reasons)
-# def decide(amount, balance, risk): ...
-
-
-
 from typing import Dict, List, Tuple
 
 DAILY_THRESHOLD = 1000.0

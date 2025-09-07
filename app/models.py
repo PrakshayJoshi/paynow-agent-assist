@@ -1,11 +1,4 @@
 
-# Phase 1: add Pydantic models for PaymentRequest, AgentStep, DecisionResponse
-# from pydantic import BaseModel, Field
-# class PaymentRequest(BaseModel): ...
-# class AgentStep(BaseModel): ...
-# class DecisionResponse(BaseModel): ...
-
-
 from pydantic import BaseModel, Field, field_validator
 from typing import List, Literal
 
@@ -16,6 +9,7 @@ class PaymentRequest(BaseModel):
     payeeId: str
     idempotencyKey: str
 
+    # ensure non-empty strings
     @field_validator('customerId', 'payeeId', 'idempotencyKey')
     @classmethod
     def _non_empty(cls, v: str) -> str:
@@ -23,6 +17,7 @@ class PaymentRequest(BaseModel):
             raise ValueError("must be non-empty")
         return v.strip()
 
+    # validate 3-letter currency code (uppercase)
     @field_validator('currency')
     @classmethod
     def _currency_code(cls, v: str) -> str:

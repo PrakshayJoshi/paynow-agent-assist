@@ -1,4 +1,9 @@
 
-# Phase 3: add API key verification (X-API-Key) and requestId generation middleware
-# def verify_api_key(...): ...
-# def request_id_middleware(...): ...
+import os
+from fastapi import Header, HTTPException, status
+
+API_KEY = os.getenv("API_KEY", "local-dev-key")
+
+def verify_api_key(x_api_key: str | None = Header(default=None)):
+    if x_api_key is None or x_api_key != API_KEY:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or missing API key")
