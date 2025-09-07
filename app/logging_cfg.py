@@ -1,0 +1,3 @@
+
+# Phase 3: structured logging setup (json lines with requestId correlation)
+# Example: def get_logger(...): ...

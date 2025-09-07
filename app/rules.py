@@ -1,0 +1,3 @@
+
+# Phase 2: deterministic rules returning (decision, reasons)
+# def decide(amount, balance, risk): ...
