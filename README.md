@@ -47,9 +47,8 @@ Health check: http://localhost:8000/healthz
 
 **Sample cURL**
 ```bash
-curl -X POST http://localhost:8000/payments/decide   -H "Content-Type: application/json"   -H "X-API-Key: $API_KEY"   -d '{"customerId":"c_123","amount":125.5,"currency":"USD","payeeId":"p_789","idempotencyKey":"uuid-1"}'
+curl -X POST http://localhost:8000/payments/decide   -H "Content-Type: application/json"   -H  -d '{"customerId":"c_123","amount":125.5,"currency":"USD","payeeId":"p_789","idempotencyKey":"uuid-1"}'
 ```
-
 ---
 
 ## Architecture (ASCII)
