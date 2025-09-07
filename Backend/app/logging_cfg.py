@@ -14,6 +14,5 @@ def mask_customer(customer_id: str) -> str:
     if not customer_id:
         return ""
     s = str(customer_id)
-    # keep last 3 visible
     tail = s[-3:] if len(s) > 3 else s
     return f"{s[:1]}***{tail}"

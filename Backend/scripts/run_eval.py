@@ -18,15 +18,15 @@ def main():
                        json=payload,
                        headers={"Content-Type":"application/json","X-API-Key":args.api_key})
         if r.status_code != 200:
-            print(f"{c['name']}: HTTP {r.status_code}")
+            print(f"❌ {c['name']}: HTTP {r.status_code}")
             continue
         got = r.json().get("decision")
         exp = c["expected"]
         if got == exp:
-            print(f"{c['name']}: {got}")
+            print(f"✅ {c['name']}: {got}")
             ok += 1
         else:
-            print(f"{c['name']}: got {got}, expected {exp}")
+            print(f"❌ {c['name']}: got {got}, expected {exp}")
     print(f"\nResult: {ok}/{len(cases)} correct")
 
 if __name__ == "__main__":

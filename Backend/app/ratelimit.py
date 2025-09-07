@@ -10,7 +10,6 @@ _buckets: dict[str, tuple[float, float]] = {}  # customerId -> (tokens, last_ts)
 def check_rate_limit(customer_id: str):
     now = time.time()
     tokens, last_ts = _buckets.get(customer_id, (BURST, now))
-    # refill
     elapsed = max(0.0, now - last_ts)
     tokens = min(BURST, tokens + elapsed * RATE)
     if tokens < 1.0:

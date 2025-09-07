@@ -1,3 +1,4 @@
+
 import time
 from uuid import uuid4
 from fastapi import FastAPI, Request
@@ -12,34 +13,22 @@ async def request_context_middleware(request: Request, call_next):
     request_id = request.headers.get("X-Request-Id") or f"req_{uuid4().hex[:8]}"
     request.state.request_id = request_id
     t0 = time.perf_counter()
-
-    response = None  # <-- ensure defined
+    response = None
     try:
         response = await call_next(request)
         return response
     except Exception as e:
-        # Log the error once, then re-raise so FastAPI returns a proper 500
         latency = round((time.perf_counter() - t0) * 1000.0, 2)
-        log_json(
-            event="http_request_error",
-            requestId=request_id,
-            method=request.method,
-            path=str(request.url.path),
-            error=str(e),
-            latency_ms=latency,
-        )
+        log_json(event="http_request_error",
+                 requestId=request_id, method=request.method, path=str(request.url.path),
+                 error=str(e), latency_ms=latency)
         raise
     finally:
         latency = round((time.perf_counter() - t0) * 1000.0, 2)
-        status_code = getattr(response, "status_code", 500)  # <-- safe fallback
-        log_json(
-            event="http_request",
-            requestId=request_id,
-            method=request.method,
-            path=str(request.url.path),
-            status=status_code,
-            latency_ms=latency,
-        )
+        status_code = getattr(response, "status_code", 500)
+        log_json(event="http_request",
+                 requestId=request_id, method=request.method, path=str(request.url.path),
+                 status=status_code, latency_ms=latency)
 
 @app.get("/healthz")
 def healthz():

@@ -1,15 +1,14 @@
 
-import json
 import time
 from uuid import uuid4
-from hashlib import sha256
 
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
 from app.models import PaymentRequest, DecisionResponse
 from app.agent import Agent
 from app.rules import decide
+from app.security import verify_api_key
 from app.ratelimit import check_rate_limit
 from app.metrics import record_request
 from app.logging_cfg import log_json, mask_customer
@@ -31,6 +30,7 @@ def get_db():
 def payments_decide(
     req: PaymentRequest,
     request: Request,
+    _=Depends(verify_api_key),
     db: Session = Depends(get_db)
 ) -> DecisionResponse:
     t0 = time.time()
@@ -45,7 +45,6 @@ def payments_decide(
     if existing and existing.req_hash == rhash:
         resp = existing.response_json
         record_request(resp.get("decision","review"), (time.time()-t0)*1000.0)
-        # Decision log (cached)
         log_json(event="decision_cached",
                  requestId=request_id,
                  decision=resp.get("decision"),
@@ -56,12 +55,15 @@ def payments_decide(
     # 3) Agent & rules
     agent = Agent()
     agent.plan()
-    
+
+    # read real balance first from DB and log via agent tool with retry wrapper
     bal_row = get_or_create_balance(db, req.customerId)
     balance = float(bal_row.balance)
-    agent.get_balance(req.customerId, balance)  # trace only
+    agent.get_balance(req.customerId, balance)
 
-    risk = agent.get_risk_signals(req.customerId, req.payeeId)    
+    # risk signals (with retry/fallback guardrails)
+    risk = agent.get_risk_signals(req.customerId, req.payeeId)
+
     decision, reasons = decide(req.amount, balance, risk)
 
     # 4) Reserve on allow (per-customer lock)
@@ -100,7 +102,7 @@ def payments_decide(
     except Exception:
         db.rollback()
 
-    # Decision log + event publish
+    # 6) Logs + Metrics
     log_json(event="decision",
              requestId=request_id,
              decision=decision,
@@ -111,7 +113,5 @@ def payments_decide(
              decision=decision,
              reasons=reasons,
              customerId=mask_customer(req.customerId))
-
-    # 6) Metrics
     record_request(decision, (time.time()-t0)*1000.0)
     return response

@@ -1,11 +1,5 @@
 
-    # PayNow + Agent Assist — Frontend (Next.js + Tailwind, TypeScript)
-
-    Minimal UI to send a payment to the backend and display **decision | reasons | agentTrace | requestId**.
-
-- Form for amount/payee/idempotency
-- Proxy server routes: `/api/decide` and `/api/metrics`
-- Timeline for **agentTrace**; colored decision badge; metrics peek
+# Frontend — Next.js + Tailwind (PayNow + Agent Assist)
 
 ## Run
 ```bash
@@ -14,19 +8,20 @@ npm run dev
 # open http://localhost:3000
 ```
 
-Set backend base if not default:
+If backend URL differs, set:
 ```bash
 echo 'NEXT_PUBLIC_BACKEND_BASE=http://localhost:8000' > .env.local
 ```
-Add API key only if your backend requires it:
+
+If backend requires API key, add server env so proxy sends header:
 ```bash
 echo 'BACKEND_BASE=http://localhost:8000' >> .env.local
 echo 'API_KEY=local-dev-key' >> .env.local
 ```
 
-## Satisfies the brief
-- FE: **React/Next.js + TS + Tailwind**
-- Core flow: user enters payment → returns **decision | reasons | agentTrace | requestId**
-- Agent trace surfaced clearly (timeline)
-- Defense-in-depth: secrets (if any) stay server-side; no PII logging
-- README + simple route (index `/`)
+### Satisfies the FE items
+- React/Next.js + TS + Tailwind
+- Payment form → calls backend → renders decision, reasons, Agent Trace, requestId
+- Observability: shows last-request latency; console timing friendly
+- Security boundary: secrets only on server; basic error handling + 1 retry
+- Accessible: labeled inputs, keyboard-friendly

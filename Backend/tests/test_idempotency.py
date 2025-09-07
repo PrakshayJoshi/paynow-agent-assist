@@ -17,4 +17,4 @@ def test_idempotency_returns_same_response():
     r2 = client.post("/payments/decide", json=payload, headers=headers)
     assert r1.status_code == 200 and r2.status_code == 200
     j1, j2 = r1.json(), r2.json()
-    assert j1 == j2  # identical (includes same requestId from cache)
+    assert j1 == j2

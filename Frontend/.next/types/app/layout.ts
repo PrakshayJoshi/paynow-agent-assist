@@ -1,4 +1,4 @@
-// File: /Users/prakshayjoshi/Documents/Projects/paynow-agent-assist/Frontend/app/layout.tsx
+// File: /Users/prakshayjoshi/Documents/Projects/paynow-agent-assist/frontend/app/layout.tsx
 import * as entry from '../../../app/layout.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

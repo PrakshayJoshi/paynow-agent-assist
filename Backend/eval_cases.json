@@ -36,12 +36,12 @@
     "name": "review-large-amount",
     "payload": {
       "customerId": "c_big",
-      "amount": 5000,
+      "amount": 1500,
       "currency": "USD",
       "payeeId": "safe_vendor",
       "idempotencyKey": "k3"
     },
-    "expected": "block"
+    "expected": "review"
   },
   {
     "name": "block-insufficient-fresh-user",

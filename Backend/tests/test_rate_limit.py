@@ -17,4 +17,4 @@ def test_rate_limit_5_per_second():
         payload = dict(base, idempotencyKey=f"rk{i}")
         r = client.post("/payments/decide", json=payload, headers=headers)
         codes.append(r.status_code)
-    assert 429 in codes  # 6th should be throttled
+    assert 429 in codes

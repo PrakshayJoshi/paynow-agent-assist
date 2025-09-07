@@ -1,4 +1,4 @@
-// File: /Users/prakshayjoshi/Documents/Projects/paynow-agent-assist/Frontend/app/api/metrics/route.ts
+// File: /Users/prakshayjoshi/Documents/Projects/paynow-agent-assist/frontend/app/api/metrics/route.ts
 import * as entry from '../../../../../app/api/metrics/route.js'
 import type { NextRequest } from 'next/server.js'
 
