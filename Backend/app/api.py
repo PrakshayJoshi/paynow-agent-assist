@@ -56,10 +56,12 @@ def payments_decide(
     # 3) Agent & rules
     agent = Agent()
     agent.plan()
-    agent.get_balance(req.customerId)  # trace only
-    risk = agent.get_risk_signals(req.customerId, req.payeeId)
+    
     bal_row = get_or_create_balance(db, req.customerId)
     balance = float(bal_row.balance)
+    agent.get_balance(req.customerId, balance)  # trace only
+
+    risk = agent.get_risk_signals(req.customerId, req.payeeId)    
     decision, reasons = decide(req.amount, balance, risk)
 
     # 4) Reserve on allow (per-customer lock)

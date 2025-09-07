@@ -56,7 +56,7 @@ export default function Page() {
   const refreshMetrics = async () => {
     setError(null);
     try {
-      const r = await fetch("/api/metrics");
+      const r = await fetch(`/api/metrics?ts=${Date.now()}`, { cache: "no-store" });
       if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
       setMetrics(await r.json());
     } catch (e: any) {
