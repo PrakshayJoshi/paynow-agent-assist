@@ -116,6 +116,7 @@ A simple event line is logged to stdout (`event="payment.decided"`) after each d
 ## Simple evals
 Use `eval_cases.json` to verify expected decisions:
 ```bash
+export API_KEY=local-dev-key
 python scripts/run_eval.py eval_cases.json --base http://localhost:8000 --api-key $API_KEY
 ```
 Output:
